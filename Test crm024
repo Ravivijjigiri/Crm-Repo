@@ -1,0 +1,162 @@
+ debugger;
+function PCApproval(approvalFlag) {
+   //alert(approvalFlag);
+
+    var status = Xrm.Page.getAttribute("statuscode");
+    if (status != null && status.getValue() != null) {
+        if (status.getValue() == 1) {
+            var control = Xrm.Page.getControl("new_crejectioncomments");
+            if (approvalFlag != null) {
+                if (approvalFlag) {
+                    Xrm.Page.getAttribute("new_pcapproval").setValue(approvalFlag);
+					Xrm.Page.getAttribute("new_pcrejection").setValue(false);
+                    if (control != null) {
+                        control.setVisible(false);
+                    }
+                    Xrm.Page.getAttribute("new_initiativequote").setValue(false);
+                    Xrm.Page.data.entity.save();
+                }
+                else {
+                    Xrm.Page.getAttribute("new_pcapproval").setValue(approvalFlag);	
+					Xrm.Page.getAttribute("new_pcrejection").setValue(true);
+		            Xrm.Page.getAttribute("new_initiativequote").setValue(false);
+                    if (control != null) {
+                   //    alert(control);
+                        control.setVisible(true);
+                        Xrm.Page.getControl("new_crejectioncomments").setFocus();
+                        var rejReason = Xrm.Page.getAttribute("new_crejectioncomments");
+                      //  alert(rejReason);
+                        if (rejReason != null) {
+                            rejReason.setRequiredLevel("required");
+                        }
+                        else {
+                            rejReason.setRequiredLevel("none");
+                        }
+                    }
+                }//end of approvalflag
+            }
+        }        else if (status.getValue() == 100000027 || status.getValue() == 100000028) {
+            var control = Xrm.Page.getControl("new_smrejectioncomments");
+            if (approvalFlag != null) {
+                if (approvalFlag) {
+                    Xrm.Page.getAttribute("new_smapproval").setValue(approvalFlag);
+					Xrm.Page.getAttribute("new_smrejection").setValue(false);
+		  //  Xrm.Page.getAttribute("new_initiativequote").setValue(false);
+                    if (control != null) {
+                        control.setVisible(false);
+                    }
+                    Xrm.Page.data.entity.save();
+                }
+                else {
+                    Xrm.Page.getAttribute("new_smapproval").setValue(approvalFlag);
+					Xrm.Page.getAttribute("new_smrejection").setValue(false);
+		//    Xrm.Page.getAttribute("new_initiativequote").setValue(false);
+                    if (control != null) {
+                        control.setVisible(true);
+                        Xrm.Page.getControl("new_smrejectioncomments").setFocus();
+                        var rejReason = Xrm.Page.getAttribute("new_smrejectioncomments");
+                        if (rejReason != null) {
+                            rejReason.setRequiredLevel("required");
+                        }
+                        else {
+                            rejReason.setRequiredLevel("none");
+                        }
+                    }
+                }
+            }
+        }             
+         if (status.getValue() == 100000027) {
+            var control = Xrm.Page.getControl("new_smrejectioncomments");
+            if (approvalFlag != null) {
+                if (approvalFlag) {
+                    Xrm.Page.getAttribute("new_smapproval").setValue(approvalFlag);
+					Xrm.Page.getAttribute("new_smrejection").setValue(false);
+       		 //   Xrm.Page.getAttribute("new_initiativequote").setValue(false);
+                    if (control != null) {
+                        control.setVisible(false);
+                    }
+                    Xrm.Page.data.entity.save();
+                }
+                else {
+                    Xrm.Page.getAttribute("new_smapproval").setValue(approvalFlag);
+					Xrm.Page.getAttribute("new_smrejection").setValue(true);
+		//    Xrm.Page.getAttribute("new_initiativequote").setValue(false);
+                    if (control == null) {
+                        control.setVisible(true);
+                        Xrm.Page.getControl("new_smrejectioncomments").setFocus();
+                        var rejReason = Xrm.Page.getAttribute("new_smrejectioncomments");
+                        if (rejReason != null) {
+                            rejReason.setRequiredLevel("required");
+                        }
+                        else {
+                            rejReason.setRequiredLevel("none");
+                        }
+                    }
+                }//end of approvalflag
+            }
+        }
+        else if (status.getValue() == 100000031 || status.getValue() == 100000032) {
+            var control = Xrm.Page.getControl("new_samrejectioncomments");
+            if (approvalFlag != null) {
+                if (approvalFlag) {
+                    Xrm.Page.getAttribute("new_samapproval").setValue(approvalFlag);
+					Xrm.Page.getAttribute("new_samrejection").setValue(false);
+		  //  Xrm.Page.getAttribute("new_initiativequote").setValue(false);
+                    if (control != null) {
+                        control.setVisible(false);
+                    }
+                    Xrm.Page.data.entity.save();
+                }
+                else {
+                    Xrm.Page.getAttribute("new_samapproval").setValue(approvalFlag);
+					Xrm.Page.getAttribute("new_samrejection").setValue(true);
+		//    Xrm.Page.getAttribute("new_initiativequote").setValue(false);
+                    if (control != null) {
+                        control.setVisible(true);
+                        Xrm.Page.getControl("new_samrejectioncomments").setFocus();
+                        var rejReason = Xrm.Page.getAttribute("new_samrejectioncomments");
+                        if (rejReason != null) {
+                            rejReason.setRequiredLevel("required");
+                        }
+                        else {
+                            rejReason.setRequiredLevel("none");
+                        }
+                    }
+                }
+            }
+        }
+
+if (status.getValue() == 100000031) {
+            var control = Xrm.Page.getControl("new_smrejectioncomments");
+            if (approvalFlag != null) {
+                if (approvalFlag) {
+                    Xrm.Page.getAttribute("new_samapproval").setValue(approvalFlag);
+					Xrm.Page.getAttribute("new_samrejection").setValue(false);
+		//    Xrm.Page.getAttribute("new_initiativequote").setValue(false);
+                    if (control != null) {
+                        control.setVisible(false);
+                    }
+                    Xrm.Page.data.entity.save();
+                }
+                else {
+                    Xrm.Page.getAttribute("new_samapproval").setValue(approvalFlag);
+					Xrm.Page.getAttribute("new_samrejection").setValue(true);
+		 //   Xrm.Page.getAttribute("new_initiativequote").setValue(false);
+                    if (control == null) {
+                        control.setVisible(true);
+                        Xrm.Page.getControl("new_samrejectioncomments").setFocus();
+                        var rejReason = Xrm.Page.getAttribute("new_samrejectioncomments");
+                        if (rejReason != null) {
+                            rejReason.setRequiredLevel("required");
+                        }
+                        else {
+                            rejReason.setRequiredLevel("none");
+                        }
+                    }
+                }//end of approvalflag
+            }
+        }
+             
+        
+    }
+}
