@@ -1,7 +1,446 @@
- . net code
- Ms crm Java script
- Linux script
- C # code
- 
- SAP code
-SQL code
+debugger;
+
+function checkDirtyFields() {
+
+  var oppAtributes = Xrm.Page.data.entity.attributes.get();
+
+  var listofDirtyAttri = new Array();
+
+  listofDirtyAttri = new Object();
+
+  if (oppAtributes != null) {
+
+    for (var i in oppAtributes) {
+
+      var attributeName = oppAtributes[i].getName();
+
+      if (oppAtributes[i].getIsDirty()) {
+
+        alert(oppAtributes[i].getName() + ":" + i);
+
+      }
+
+    }
+
+  }
+
+}
+
+
+function Ribbon_Approve_EnableDisableRule() {
+    var statusreason = Xrm.Page.getAttribute("statuscode").getText();
+    var bu = Xrm.Page.getAttribute("new_bu").getValue();
+    if (bu == 'Branch 18') {
+        return false;
+    }
+    else {
+        var statusreason = Xrm.Page.getAttribute("statuscode").getText();
+        var status = Xrm.Page.getAttribute("statecode").getText();
+        var currentuser = Xrm.Page.context.getUserName();
+        var quoteassignedto = Xrm.Page.data.entity.attributes.get("new_quoteapproversid").getValue()[0].id;
+        var quoteassignedtoname = Xrm.Page.data.entity.attributes.get("new_quoteapproversid").getValue()[0].name;
+        var currentuserval = currentuser.replace(/\s/g,'');
+        var quoteassignedtonameval = quoteassignedtoname.replace(/\s/g,'');
+        if ((statusreason == 'InProgress' && currentuserval == quoteassignedtonameval)
+                                                || (statusreason=='PC Approved' && currentuserval == quoteassignedtonameval))
+            return true;
+         else if (statusreason == 'SM Approved' || statusreason == 'PC Rejected' || status == 'Active' )
+            return false;      
+       else
+            return false;  
+    }
+}
+
+function Ribbon_Reject_EnableDisableRule() {
+    var statusreason = Xrm.Page.getAttribute("statuscode").getText();
+    var bu = Xrm.Page.getAttribute("new_bu").getValue();
+    if (bu == 'Branch 18') {
+        return false;
+    }
+   else {
+        var ownername = Xrm.Page.getAttribute("ownerid").getValue()[0].name;
+        var statusreason = Xrm.Page.getAttribute("statuscode").getText();
+        var status = Xrm.Page.getAttribute("statecode").getText();
+        var currentuser = Xrm.Page.context.getUserName();
+        var quoteassignedto = Xrm.Page.data.entity.attributes.get("new_quoteapproversid").getValue()[0].id;
+        var quoteassignedtoname = Xrm.Page.data.entity.attributes.get("new_quoteapproversid").getValue()[0].name;
+                                var currentuserval = currentuser.replace(/\s/g,'');
+                                var quoteassignedtonameval = quoteassignedtoname.replace(/\s/g,'');
+       if ((statusreason=='InProgress' && currentuserval == quoteassignedtonameval)
+                                                || (statusreason=='PC Approved' && currentuserval == quoteassignedtonameval)
+                                    || (statusreason=='SM Approved' && currentuserval == quoteassignedtonameval))
+            return true;
+        else if (statusreason == 'SM Rejected' || statusreason == 'PC Rejected' || status == 'Active')
+            return false;
+      else
+            return false;
+   }
+}
+
+function Ribbon_ActivateQuote_EnableRule() {
+var quoteassignedtoname = "";
+    var currentUserRoles = Xrm.Page.context.getUserRoles();
+    for (var i = 0; i < currentUserRoles.length; i++) {
+        var userRoleId = currentUserRoles[i];
+        var userRoleName = GetRoleName(userRoleId);
+    }
+    var statusreason = Xrm.Page.getAttribute("statuscode").getText();
+    var businessunit = Xrm.Page.getAttribute("new_bu").getValue();
+    var currentuser = Xrm.Page.context.getUserName();
+    var statusreason = Xrm.Page.getAttribute("statuscode").getText();
+    if (Xrm.Page.data.entity.attributes.get("new_quoteapproversid").getValue() != null) {
+        quoteassignedtoname = Xrm.Page.data.entity.attributes.get("new_quoteapproversid").getValue()[0].name;
+    }
+                var currentuserval = currentuser.replace(/\s/g,'');
+                var quoteassignedtonameval = quoteassignedtoname.replace(/\s/g,'');
+    if (userRoleName == 'System Administrator' || businessunit == 'Branch 18')
+        return true;
+    if(statusreason == 'SM Approved' && ( currentuserval == quoteassignedtonameval)) 
+        return true;
+    else
+        return false;
+}
+
+//Check for Sales Coordinators role
+function CheckUserRole() {
+                //var statusreason = Xrm.Page.getAttribute("statuscode").getText();
+                //var statusreasonval=statusreason.replace(/\s/g,'');
+    var currentUserRoles = Xrm.Page.context.getUserRoles();
+    for (var i = 0; i < currentUserRoles.length; i++) {
+        var userRoleId = currentUserRoles[i];
+        var userRoleName = GetRoleName(userRoleId);
+        var userRoleNameval=userRoleName.replace(/\s/g,'');
+        if (userRoleNameval == 'SalesCoordinators') {                            
+            ReadOnly(userRoleNameval);
+            break;
+        }
+    }
+    return false;
+}
+
+//Get Rolename based on RoleId
+function GetRoleName(roleId) {
+    var roleName = null;
+
+    var req = new XMLHttpRequest();
+    req.open("GET", Xrm.Page.context.getClientUrl() + "/api/data/v8.2/roles?$select=name&$filter=roleid eq " + roleId, false);
+    req.setRequestHeader("OData-MaxVersion", "4.0");
+    req.setRequestHeader("OData-Version", "4.0");
+    req.setRequestHeader("Accept", "application/json");
+    req.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+    req.setRequestHeader("Prefer", "odata.include-annotations=\"*\"");
+    req.onreadystatechange = function () {
+        if (this.readyState === 4) {
+            req.onreadystatechange = null;
+            if (this.status === 200) {
+                var results = JSON.parse(this.response);
+                for (var i = 0; i < results.value.length; i++) {
+                    roleName = results.value[i]["name"];
+                }
+            } else {
+                Xrm.Utility.alertDialog(this.statusText);
+            }
+        }
+    };
+    req.send();
+
+    return roleName;
+}
+
+function isRevised() {
+              var statusreason = Xrm.Page.getAttribute("statuscode").getText();
+              if (Xrm.Page.ui.getFormType() != 4 && statusreason == 'InProgress'){
+		  Xrm.Page.getAttribute("new_isrevised").setValue(true);
+                  Xrm.Page.data.entity.save();
+              } 
+}
+
+
+
+function OnLoad() {
+    var ownerid;
+    ownerid = Xrm.Page.getAttribute("ownerid").getValue()[0].id.replace("{","").replace("}","");
+
+    var req = new XMLHttpRequest();
+    req.open("GET", Xrm.Page.context.getClientUrl() + "/api/data/v8.2/systemusers?$select=_businessunitid_value,fullname,systemuserid&$filter=systemuserid eq "+ ownerid, false);
+    req.setRequestHeader("OData-MaxVersion", "4.0");
+    req.setRequestHeader("OData-Version", "4.0");
+    req.setRequestHeader("Accept", "application/json");
+    req.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+    req.setRequestHeader("Prefer", "odata.include-annotations=\"*\"");
+    req.onreadystatechange = function () {
+        if (this.readyState === 4) {
+            req.onreadystatechange = null;
+            if (this.status === 200) {
+                var results = JSON.parse(this.response);                
+
+                var businessunitid;
+                if (results.value.length > 0) {
+                    for (var index = 0; index < results.value.length; index++) {
+                        if (results.value[index]["_businessunitid_value"] != undefined) {
+                           businessunitid = results.value[index]["_businessunitid_value@OData.Community.Display.V1.FormattedValue"];
+                        }
+                        if (businessunitid == 'Branch 18') {
+                            Xrm.Page.getAttribute("new_bu").setValue(businessunitid);
+                            Xrm.Page.getAttribute("new_bu").setSubmitMode("always");
+                            Xrm.Page.getControl("new_initiativequote").setVisible(false);
+                            Xrm.Page.getAttribute("new_initiativequote").setSubmitMode("always");
+                            Xrm.Page.getControl("new_quoteapproversid").setVisible(false);
+                            Xrm.Page.getAttribute("new_quoteapproversid").setSubmitMode("always");
+                        } else {
+                            Xrm.Page.getAttribute("new_quoteapproversid").setRequiredLevel("required");
+                        }
+                    }
+                }
+            } else {
+                Xrm.Utility.alertDialog(this.statusText);
+            }
+        }
+    };
+    req.send();
+}
+
+function lockComments() {
+    var statusreason = Xrm.Page.getAttribute("statuscode").getText();
+    var currentuser = Xrm.Page.context.getUserName();
+    var ownername = Xrm.Page.getAttribute("ownerid").getValue()[0].name;
+    if (statusreason == 'PC Rejected' && currentuser != ownername) {
+        Xrm.Page.getControl("new_crejectioncomments").setDisabled(true);
+    } else if (statusreason == 'SM Rejected' && currentuser != ownername) {
+        Xrm.Page.getControl("new_smrejectioncomments").setDisabled(true);
+    } else if (statusreason == 'SAM Rejected' && currentuser != ownername) {
+        Xrm.Page.getControl("new_samrejectioncomments").setDisabled(true);
+    }
+}
+
+function ReadOnly(userRoleNameval) {
+          
+    if (Xrm.Page.data.entity.attributes.get("new_quoteapproversid").getValue() != null) {
+        var quoteassignedtoname = Xrm.Page.data.entity.attributes.get("new_quoteapproversid").getValue()[0].name;
+    }    
+
+    var req = new XMLHttpRequest();
+    req.open("GET", Xrm.Page.context.getClientUrl() + "/api/data/v8.2/new_jdps_quoteuserses?$select=new_approvertype,new_name&$filter=new_name eq '" + quoteassignedtoname + "'", false);
+    req.setRequestHeader("OData-MaxVersion", "4.0");
+    req.setRequestHeader("OData-Version", "4.0");
+    req.setRequestHeader("Accept", "application/json");
+    req.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+    req.setRequestHeader("Prefer", "odata.include-annotations=\"*\"");
+    req.onreadystatechange = function () {
+        if (this.readyState === 4) {
+            req.onreadystatechange = null;
+            if (this.status === 200) {
+                var results = JSON.parse(this.response);
+                for (var i = 0; i < results.value.length; i++) {
+                    var type = results.value[i]["new_approvertype"];
+                    var new_approvertype_formatted = results.value[i]["new_approvertype@OData.Community.Display.V1.FormattedValue"];
+                    var name = results.value[i]["new_name"];
+                }
+            } else {
+                Xrm.Utility.alertDialog(this.statusText);
+            }
+        }
+    };
+    req.send();
+
+    var currentuser = Xrm.Page.context.getUserName();
+    var ownername = Xrm.Page.getAttribute("ownerid").getValue()[0].name;
+    //var initiatequote = Xrm.Page.getAttribute("new_initiativequote").getText();
+    var initiatequote = Xrm.Page.getAttribute("new_initiativequote").getValue();
+    var statusreason = Xrm.Page.getAttribute("statuscode").getText();
+    if ((currentuser == ownername && initiatequote)
+        || currentuser != ownername
+       || ((statusreason == 'PC Approved'
+        || statusreason == 'SM Approved'
+        || statusreason == 'SAM Approved') && currentuser == ownername)) {
+        disableFields();
+    }
+    if((userRoleNameval == 'SalesCoordinators' || currentuser == ownername) &&
+        (statusreason == 'PC Rejected'
+            || statusreason == 'SM Rejected'
+            || statusreason == 'SAM Rejected')
+        ) {
+        enableFields();
+    }
+
+
+}
+function enableFields() {
+    Xrm.Page.getControl("name").setDisabled(false);
+    Xrm.Page.getControl("new_jdquoteref").setDisabled(false);
+    Xrm.Page.getControl("new_freightpolicy").setDisabled(false);
+    Xrm.Page.getControl("pricelevelid").setDisabled(false);
+    Xrm.Page.getControl("new_quoteapproversid").setDisabled(false);
+    Xrm.Page.getControl("new_initiativequote").setDisabled(false);
+    Xrm.Page.getControl("customerid").setDisabled(false);
+    Xrm.Page.getControl("new_quotedate").setDisabled(false);
+    Xrm.Page.getControl("transactioncurrencyid").setDisabled(false);
+    Xrm.Page.getControl("effectivefrom").setDisabled(false);
+    Xrm.Page.getControl("effectiveto").setDisabled(false);
+    //Xrm.Page.getControl("new_generalcomments").setDisabled(false);
+    Xrm.Page.getControl("new_freightcomments").setDisabled(false);
+}
+function disableFields() {
+    Xrm.Page.getControl("name").setDisabled(true);
+    Xrm.Page.getControl("new_jdquoteref").setDisabled(true);
+    Xrm.Page.getControl("new_freightpolicy").setDisabled(true);
+    Xrm.Page.getControl("pricelevelid").setDisabled(true);
+    Xrm.Page.getControl("new_quoteapproversid").setDisabled(true);
+    Xrm.Page.getControl("new_initiativequote").setDisabled(true);
+    Xrm.Page.getControl("customerid").setDisabled(true);
+    Xrm.Page.getControl("new_quotedate").setDisabled(true);
+    Xrm.Page.getControl("transactioncurrencyid").setDisabled(true);
+    Xrm.Page.getControl("effectivefrom").setDisabled(true);
+    Xrm.Page.getControl("effectiveto").setDisabled(true);
+    //Xrm.Page.getControl("new_generalcomments").setDisabled(true);
+    Xrm.Page.getControl("new_freightcomments").setDisabled(true);
+}
+
+function requestforapprovalEnableDisable() {
+    var currentuser = Xrm.Page.context.getUserName();
+    var ownername = Xrm.Page.getAttribute("ownerid").getValue()[0].name;
+    if (currentuser == ownername) {
+        Xrm.Page.getControl("new_initiativequote").setVisible(true);
+        Xrm.Page.getAttribute("new_initiativequote").setSubmitMode("always");
+    } else {
+        Xrm.Page.getControl("new_initiativequote").setVisible(false);
+        Xrm.Page.getAttribute("new_initiativequote").setSubmitMode("always");
+    }
+}
+
+function clearComments() {
+    //var initiatequote = Xrm.Page.getAttribute("new_initiativequote").getText();
+    var initiatequote = Xrm.Page.getAttribute("new_initiativequote").getValue();
+    var currentuser = Xrm.Page.context.getUserName();
+    var ownername = Xrm.Page.getAttribute("ownerid").getValue()[0].name;
+    if (initiatequote && currentuser == ownername) {
+        Xrm.Page.getAttribute("new_crejectioncomments").setValue(null);
+        Xrm.Page.getAttribute("new_smrejectioncomments").setValue(null);
+        Xrm.Page.getAttribute("new_samrejectioncomments").setValue(null);
+	Xrm.Page.getAttribute("new_isrevised").setValue(false);
+    }
+
+    // disableFields();
+}
+
+function lockandunlockRequestforapproval() {
+    var status = Xrm.Page.getAttribute("statecode").getText();
+    var statusreason = Xrm.Page.getAttribute("statuscode").getText();
+    //var initiatequote = Xrm.Page.getAttribute("new_initiativequote").getText();
+    var initiatequote = Xrm.Page.getAttribute("new_initiativequote").getValue();
+    if (statusreason != 'InProgress') {
+        Xrm.Page.getControl("new_initiativequote").setVisible(false);
+        Xrm.Page.getAttribute("new_initiativequote").setSubmitMode("always");
+        //initiatequote.setDisabled(true)
+    }
+    if (statusreason == 'InProgress' && status == 'Active') {
+        Xrm.Page.getControl("new_initiativequote").setVisible(false);
+        Xrm.Page.getAttribute("new_initiativequote").setSubmitMode("always");
+    }
+   if (initiatequote && statusreason == 'InProgress') {
+        Xrm.Page.getControl("new_initiativequote").setVisible(false);
+        Xrm.Page.getAttribute("new_initiativequote").setSubmitMode("always");
+    }
+}
+
+function Form_onload() {
+    Xrm.Page.ui.tabs.get(1).setVisible(false);
+    Xrm.Page.ui.tabs.get(2).setVisible(false);
+    Xrm.Page.getControl("quotenumber").setVisible(true);
+    var pccommens = Xrm.Page.getAttribute("new_crejectioncomments").getValue();
+    var smcommens = Xrm.Page.getAttribute("new_smrejectioncomments").getValue();
+    var samcommens = Xrm.Page.getAttribute("new_samrejectioncomments").getValue();
+    if (pccommens != null) {
+        Xrm.Page.getControl("new_crejectioncomments").setVisible(true);
+    } else if (smcommens != null) {
+        Xrm.Page.getControl("new_smrejectioncomments").setVisible(true);
+   } else if (samcommens != null) {
+        Xrm.Page.getControl("new_samrejectioncomments").setVisible(true);
+    }
+    
+    requestforapprovalEnableDisable();
+    clearComments();
+    ReadOnly();
+    lockComments();
+    autoPopulateQuoteAssignedTo();
+   CheckUserRole();
+    
+}
+
+function onSave() {
+    var owner = Xrm.Page.getAttribute("ownerid").getValue();
+    var currentuser = Xrm.Page.context.getUserName();
+    var statusreason = Xrm.Page.getAttribute("statuscode").getText();
+    var ownerID = owner[0].id;
+    var ownerName = owner[0].name;
+    var entityType = owner[0].entityType;
+    //alert(statusreason);
+    if (ownerName == currentuser) {
+        //alert('statusreason'+statusreason);
+        if (statusreason == 'PC Rejected' || statusreason == 'SAM Rejected' || statusreason == 'SM Rejected') {
+            Xrm.Page.getAttribute("statuscode").setValue(1);
+            Xrm.Page.getAttribute("statuscode").setSubmitMode("always");
+            Xrm.Page.getAttribute("new_pcapproval").setValue(false);
+            Xrm.Page.getAttribute("new_pcapproval").setSubmitMode("always");
+            Xrm.Page.getAttribute("new_samapproval").setValue(false);
+            Xrm.Page.getAttribute("new_samapproval").setSubmitMode("always");
+            Xrm.Page.getAttribute("new_smapproval").setValue(false);
+            Xrm.Page.getAttribute("new_smapproval").setSubmitMode("always");
+            Xrm.Page.getAttribute("new_pcrejection").setValue(false);
+            Xrm.Page.getAttribute("new_pcrejection").setSubmitMode("always");
+            Xrm.Page.getAttribute("new_smrejection").setValue(false);
+            Xrm.Page.getAttribute("new_smrejection").setSubmitMode("always");
+            Xrm.Page.getAttribute("new_samrejection").setValue(false);
+            Xrm.Page.getAttribute("new_samrejection").setSubmitMode("always");
+            
+        }
+    }
+    Ribbon_Reject_EnableDisableRule();
+    Ribbon_Approve_EnableDisableRule();
+    requestforapprovalEnableDisable();
+    clearComments();
+    ReadOnly();
+    lockComments();
+    OnLoad();
+    CheckUserRole();
+}
+
+
+function autoPopulateQuoteAssignedTo() {
+    if (Xrm.Page.ui.getFormType() != 1) {
+        return;
+    }
+
+    //Retrieve JDPS Quote User with approver type = PC
+    var req = new XMLHttpRequest();
+    req.open("GET", Xrm.Page.context.getClientUrl() + "/api/data/v8.2/new_jdps_quoteuserses?$select=new_jdps_quoteusersid,new_name&$filter=new_approvertype eq 1", true);
+    req.setRequestHeader("OData-MaxVersion", "4.0");
+    req.setRequestHeader("OData-Version", "4.0");
+    req.setRequestHeader("Accept", "application/json");
+    req.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+    req.setRequestHeader("Prefer", "odata.include-annotations=\"*\"");
+    req.onreadystatechange = function () {
+        if (this.readyState === 4) {            
+            req.onreadystatechange = null;
+            if (this.status === 200) {
+                var results = JSON.parse(this.response);
+                if (results.value.length > 0) {
+                    //Get only the first value retrieved
+                    var new_jdps_quoteusersid = results.value[0]["new_jdps_quoteusersid"];
+                    var new_name = results.value[0]["new_name"];
+
+                    //Assign lookup value to new_quoteapproversid
+                    var quoteApprovers = new Array();
+                    quoteApprovers[0] = new Object();
+                    quoteApprovers[0].id = new_jdps_quoteusersid;
+                    quoteApprovers[0].name = new_name;
+                    quoteApprovers[0].entityType = "new_jdps_quoteusers";
+                    Xrm.Page.getAttribute("new_quoteapproversid").setValue(quoteApprovers);
+                }
+           } else {
+                Xrm.Utility.alertDialog(this.statusText);
+            }
+        }
+    };
+    req.send();
+}
